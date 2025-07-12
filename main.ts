@@ -535,10 +535,15 @@ function levelOneBossSequence () {
 	
 }
 // For loading and merging tilemaps
-function handleTilemaps () {
-    levelOneMap = tilemap`starting_level`
-    levelOneLeftMap = tilemap`left_map`
+function setupTilemaps () {
+    levelOneMap = tilemap`level_1`
+    levelOneLeftMap = tilemap`level_1_left`
     tileUtil.connectMaps(levelOneMap, levelOneLeftMap, MapConnectionKind.Door1)
+}
+function setupVariables () {
+    info.setLife(3)
+    checkpoint = hero.tilemapLocation()
+    hasKey = false
 }
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
     xDir = -1
@@ -567,10 +572,44 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     xDir = 1
     yDir = 0
 })
+function spawnEnemies () {
+    if (tileUtil.currentTilemap() == levelOneLeftMap) {
+        tileUtil.createSpritesOnTiles(assets.tile`myTile2`, img`
+            ........................
+            ........................
+            ........................
+            ........................
+            ..........ffff..........
+            ........ff1111ff........
+            .......fb111111bf.......
+            .......f11111111f.......
+            ......fd11111111df......
+            ......fd11111111df......
+            ......fddd1111dddf......
+            ......fbdbfddfbdbf......
+            ......fcdcf11fcdcf......
+            .......fb111111bf.......
+            ......fffcdb1bdffff.....
+            ....fc111cbfbfc111cf....
+            ....f1b1b1ffff1b1b1f....
+            ....fbfbffffffbfbfbf....
+            .........ffffff.........
+            ...........fff..........
+            ........................
+            ........................
+            ........................
+            ........................
+            `, SpriteKind.Enemy)
+        tileUtil.coverAllTiles(assets.tile`myTile2`, sprites.dungeon.floorDark2)
+    } else if (tileUtil.currentTilemap() == levelOneMap) {
+    	
+    }
+}
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.hazardLava1, function (sprite, location) {
     sprite.sayText("ow!", 500, false)
     scene.cameraShake(4, 500)
     music.play(music.melodyPlayable(music.knock), music.PlaybackMode.UntilDone)
+    info.changeLifeBy(-1)
     respawnPlayer()
 })
 function handlePlayerProjectiles () {
@@ -650,11 +689,6 @@ function handlePlayerProjectiles () {
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
             `, hero, 0, 150)
-    }
-}
-function createEnemies () {
-    if (currentLevel == 1) {
-    	
     }
 }
 tileUtil.onMapLoaded(function (tilemap2) {
@@ -750,6 +784,8 @@ let dungeonKey: Sprite = null
 let text_list: string[] = []
 let projectile: Sprite = null
 let isKeyInserted = false
+let hasKey = false
+let checkpoint: tiles.Location = null
 let statusbar: StatusBarSprite = null
 let hero: Sprite = null
 let levelOneLeftMap: tiles.TileMapData = null
@@ -758,7 +794,6 @@ let yDir = 0
 let enemyStatusBar: StatusBarSprite = null
 let levelOneMap: tiles.TileMapData = null
 let currentLevel = 0
-let hasKey = false
 game.setDialogTextColor(1)
 game.setDialogFrame(img`
     ffffffffffffffffffffffff
@@ -786,8 +821,7 @@ game.setDialogFrame(img`
     bccccccccccccccccccccccb
     cccccccccccccccccccccccc
     `)
-handleTilemaps()
+setupTilemaps()
 setLevel(1)
 setPlayer()
-hasKey = false
-info.setLife(3)
+setupVariables()

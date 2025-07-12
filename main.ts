@@ -14,8 +14,51 @@ sprites.onCreated(SpriteKind.Enemy, function (sprite) {
     enemyStatusBar = statusbars.create(20, 4, StatusBarKind.EnemyHealth)
     enemyStatusBar.attachToSprite(sprite)
 })
-controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
-    animation.runImageAnimation(
+scene.onHitWall(SpriteKind.Player, function (sprite, location) {
+    if (currentLevel == 1) {
+        levelOneStartRoomHitsWallLogic(sprite)
+    }
+})
+scene.onOverlapTile(SpriteKind.Player, tileUtil.door0, function (sprite, location) {
+    tileUtil.loadConnectedMap(MapConnectionKind.Door1)
+    tiles.placeOnRandomTile(sprite, tileUtil.door0)
+    if (tileUtil.currentTilemap() == levelOneLeftMap) {
+        sprite.x += -16
+    } else if (tileUtil.currentTilemap() == levelOneMap) {
+        sprite.x += 16
+    }
+})
+tileUtil.onMapUnloaded(function (tilemap2) {
+    sprites.destroyAllSpritesOfKind(SpriteKind.Enemy)
+})
+function setPlayer () {
+    hero = sprites.create(img`
+        . . . . . . f f f f . . . . . . 
+        . . . . f f f 2 2 f f f . . . . 
+        . . . f f f 2 2 2 2 f f f . . . 
+        . . f f f e e e e e e f f f . . 
+        . . f f e 2 2 2 2 2 2 e e f . . 
+        . . f e 2 f f f f f f 2 e f . . 
+        . . f f f f e e e e f f f f . . 
+        . f f e f b f 4 4 f b f e f f . 
+        . f e e 4 1 f d d f 1 4 e e f . 
+        . . f e e d d d d d d e e f . . 
+        . . . f e e 4 4 4 4 e e f . . . 
+        . . e 4 f 2 2 2 2 2 2 f 4 e . . 
+        . . 4 d f 2 2 2 2 2 2 f d 4 . . 
+        . . 4 4 f 4 4 5 5 4 4 f 4 4 . . 
+        . . . . . f f f f f f . . . . . 
+        . . . . . f f . . f f . . . . . 
+        `, SpriteKind.Player)
+    controller.moveSprite(hero, 100, 100)
+    tiles.placeOnRandomTile(hero, assets.tile`myTile`)
+    scene.cameraFollowSprite(hero)
+    statusbar = statusbars.create(35, 5, StatusBarKind.Health)
+    statusbar.setBarBorder(1, 15)
+    statusbar.setLabel("HP")
+    statusbar.positionDirection(CollisionDirection.Top)
+    statusbar.setOffsetPadding(-55, 12)
+    characterAnimations.loopFrames(
     hero,
     [img`
         . . . . . . f f f f . . . . . . 
@@ -86,29 +129,12 @@ controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
         . . . 4 e e f f f f f f e . . . 
         . . . . . . . . . f f f . . . . 
         `],
-    100,
-    false
+    200,
+    characterAnimations.rule(Predicate.MovingUp)
     )
-})
-scene.onHitWall(SpriteKind.Player, function (sprite, location) {
-    if (currentLevel == 1) {
-        levelOneStartRoomHitsWallLogic(sprite)
-    }
-})
-scene.onOverlapTile(SpriteKind.Player, tileUtil.door0, function (sprite, location) {
-    tileUtil.loadConnectedMap(MapConnectionKind.Door1)
-    tiles.placeOnRandomTile(sprite, tileUtil.door0)
-    if (tileUtil.currentTilemap() == levelOneLeftMap) {
-        sprite.x += -16
-    } else if (tileUtil.currentTilemap() == levelOneMap) {
-        sprite.x += 16
-    }
-})
-tileUtil.onMapUnloaded(function (tilemap2) {
-    sprites.destroyAllSpritesOfKind(SpriteKind.Enemy)
-})
-function setPlayer () {
-    hero = sprites.create(img`
+    characterAnimations.loopFrames(
+    hero,
+    [img`
         . . . . . . f f f f . . . . . . 
         . . . . f f f 2 2 f f f . . . . 
         . . . f f f 2 2 2 2 f f f . . . 
@@ -125,37 +151,62 @@ function setPlayer () {
         . . 4 4 f 4 4 5 5 4 4 f 4 4 . . 
         . . . . . f f f f f f . . . . . 
         . . . . . f f . . f f . . . . . 
-        `, SpriteKind.Player)
-    controller.moveSprite(hero, 100, 100)
-    tiles.placeOnRandomTile(hero, assets.tile`myTile`)
-    scene.cameraFollowSprite(hero)
-    statusbar = statusbars.create(35, 5, StatusBarKind.Health)
-    statusbar.setBarBorder(1, 15)
-    statusbar.setLabel("HP")
-    statusbar.positionDirection(CollisionDirection.Top)
-    statusbar.setOffsetPadding(-55, 12)
-}
-controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    handlePlayerProjectiles()
-    if (currentLevel == 1) {
-        levelOneStartRoomSequence()
-    } else if (currentLevel == 2) {
-    	
-    } else if (currentLevel == 3) {
-    	
-    }
-})
-function levelOneBossSequence () {
-	
-}
-// For loading and merging tilemaps
-function handleTilemaps () {
-    levelOneMap = tilemap`starting_level`
-    levelOneLeftMap = tilemap`left_map`
-    tileUtil.connectMaps(levelOneMap, levelOneLeftMap, MapConnectionKind.Door1)
-}
-controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
-    animation.runImageAnimation(
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . f f f f . . . . . . 
+        . . . . f f f 2 2 f f f . . . . 
+        . . . f f f 2 2 2 2 f f f . . . 
+        . . f f f e e e e e e f f f . . 
+        . . f f e 2 2 2 2 2 2 e e f . . 
+        . f f e 2 f f f f f f 2 e f f . 
+        . f f f f f e e e e f f f f f . 
+        . . f e f b f 4 4 f b f e f . . 
+        . . f e 4 1 f d d f 1 4 e f . . 
+        . . . f e 4 d d d d 4 e f e . . 
+        . . f e f 2 2 2 2 e d d 4 e . . 
+        . . e 4 f 2 2 2 2 e d d e . . . 
+        . . . . f 4 4 5 5 f e e . . . . 
+        . . . . f f f f f f f . . . . . 
+        . . . . f f f . . . . . . . . . 
+        `,img`
+        . . . . . . f f f f . . . . . . 
+        . . . . f f f 2 2 f f f . . . . 
+        . . . f f f 2 2 2 2 f f f . . . 
+        . . f f f e e e e e e f f f . . 
+        . . f f e 2 2 2 2 2 2 e e f . . 
+        . . f e 2 f f f f f f 2 e f . . 
+        . . f f f f e e e e f f f f . . 
+        . f f e f b f 4 4 f b f e f f . 
+        . f e e 4 1 f d d f 1 4 e e f . 
+        . . f e e d d d d d d e e f . . 
+        . . . f e e 4 4 4 4 e e f . . . 
+        . . e 4 f 2 2 2 2 2 2 f 4 e . . 
+        . . 4 d f 2 2 2 2 2 2 f d 4 . . 
+        . . 4 4 f 4 4 5 5 4 4 f 4 4 . . 
+        . . . . . f f f f f f . . . . . 
+        . . . . . f f . . f f . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . f f f f . . . . . . 
+        . . . . f f f 2 2 f f f . . . . 
+        . . . f f f 2 2 2 2 f f f . . . 
+        . . f f f e e e e e e f f f . . 
+        . . f e e 2 2 2 2 2 2 e f f . . 
+        . f f e 2 f f f f f f 2 e f f . 
+        . f f f f f e e e e f f f f f . 
+        . . f e f b f 4 4 f b f e f . . 
+        . . f e 4 1 f d d f 1 4 e f . . 
+        . . e f e 4 d d d d 4 e f . . . 
+        . . e 4 d d e 2 2 2 2 f e f . . 
+        . . . e d d e 2 2 2 2 f 4 e . . 
+        . . . . e e f 5 5 4 4 f . . . . 
+        . . . . . f f f f f f f . . . . 
+        . . . . . . . . . f f f . . . . 
+        `],
+    200,
+    characterAnimations.rule(Predicate.MovingDown)
+    )
+    characterAnimations.loopFrames(
     hero,
     [img`
         . . . . f f f f f f . . . . . . 
@@ -226,31 +277,10 @@ controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
         . . f f f f f f f f f f . . . . 
         . . . f f f . . . f f . . . . . 
         `],
-    100,
-    false
+    200,
+    characterAnimations.rule(Predicate.MovingLeft)
     )
-})
-function levelOneStartRoomHitsWallLogic (sprite: Sprite) {
-    if (sprite.tileKindAt(TileDirection.Top, sprites.dungeon.greenSwitchUp)) {
-        if (!(isKeyInserted)) {
-            sprite.sayText("oh! A Lever!", 1000, true)
-        }
-    } else if (sprite.tileKindAt(TileDirection.Right, assets.tile`myTile10`) || sprite.tileKindAt(TileDirection.Right, assets.tile`myTile11`)) {
-        scene.cameraShake(4, 200)
-        sprite.sayText("locked.", 2500, true)
-    } else if (sprite.tileKindAt(TileDirection.Top, assets.tile`myTile7`)) {
-        if (!(hasKey)) {
-            sprite.sayText("hmm...a key hole...", 2000, true)
-        }
-    }
-}
-statusbars.onZero(StatusBarKind.Health, function (status) {
-    info.changeLifeBy(-1)
-    respawnPlayer()
-    game.showLongText("Only " + info.life() + "lives left..", DialogLayout.Center)
-})
-controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
-    animation.runImageAnimation(
+    characterAnimations.loopFrames(
     hero,
     [img`
         . . . . . . f f f f f f . . . . 
@@ -321,9 +351,207 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
         . . . . f f f f f f f f f f . . 
         . . . . . f f . . . f f f . . . 
         `],
-    100,
-    false
+    200,
+    characterAnimations.rule(Predicate.MovingRight)
     )
+    characterAnimations.loopFrames(
+    hero,
+    [img`
+        . . . . . . f f f f . . . . . . 
+        . . . . f f f 2 2 f f f . . . . 
+        . . . f f f 2 2 2 2 f f f . . . 
+        . . f f f e e e e e e f f f . . 
+        . . f f e 2 2 2 2 2 2 e e f . . 
+        . . f e 2 f f f f f f 2 e f . . 
+        . . f f f f e e e e f f f f . . 
+        . f f e f b f 4 4 f b f e f f . 
+        . f e e 4 1 f d d f 1 4 e e f . 
+        . . f e e d d d d d d e e f . . 
+        . . . f e e 4 4 4 4 e e f . . . 
+        . . e 4 f 2 2 2 2 2 2 f 4 e . . 
+        . . 4 d f 2 2 2 2 2 2 f d 4 . . 
+        . . 4 4 f 4 4 5 5 4 4 f 4 4 . . 
+        . . . . . f f f f f f . . . . . 
+        . . . . . f f . . f f . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . f f f f . . . . . . 
+        . . . . f f f 2 2 f f f . . . . 
+        . . . f f f 2 2 2 2 f f f . . . 
+        . . f f f e e e e e e f f f . . 
+        . . f f e 2 2 2 2 2 2 e e f . . 
+        . . f e 2 f f f f f f 2 e f . . 
+        . . f f f f e e e e f f f f . . 
+        . f f e f b f 4 4 f b f e f f . 
+        . f e e 4 1 f d d f 1 4 e e f . 
+        . . f e e d d d d d d e e f . . 
+        . . . f e e 4 4 4 4 e e f . . . 
+        . . e 4 f 2 2 2 2 2 2 f 4 e . . 
+        . . 4 d f 2 2 2 2 2 2 f d 4 . . 
+        . . 4 4 f 4 4 5 5 4 4 f 4 4 . . 
+        . . . . . f f f f f f . . . . . 
+        `],
+    500,
+    characterAnimations.rule(Predicate.NotMoving, Predicate.FacingDown)
+    )
+    characterAnimations.loopFrames(
+    hero,
+    [img`
+        . . . . . . f f f f . . . . . . 
+        . . . . f f e e e e f f . . . . 
+        . . . f e e e f f e e e f . . . 
+        . . f f f f f 2 2 f f f f f . . 
+        . . f f e 2 e 2 2 e 2 e f f . . 
+        . . f e 2 f 2 f f 2 f 2 e f . . 
+        . . f f f 2 2 e e 2 2 f f f . . 
+        . f f e f 2 f e e f 2 f e f f . 
+        . f e e f f e e e e f e e e f . 
+        . . f e e e e e e e e e e f . . 
+        . . . f e e e e e e e e f . . . 
+        . . e 4 f f f f f f f f 4 e . . 
+        . . 4 d f 2 2 2 2 2 2 f d 4 . . 
+        . . 4 4 f 4 4 4 4 4 4 f 4 4 . . 
+        . . . . . f f f f f f . . . . . 
+        . . . . . f f . . f f . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . f f f f . . . . . . 
+        . . . . f f e e e e f f . . . . 
+        . . . f e e e f f e e e f . . . 
+        . . f f f f f 2 2 f f f f f . . 
+        . . f f e 2 e 2 2 e 2 e f f . . 
+        . . f e 2 f 2 f f 2 f 2 e f . . 
+        . . f f f 2 2 e e 2 2 f f f . . 
+        . f f e f 2 f e e f 2 f e f f . 
+        . f e e f f e e e e f e e e f . 
+        . . f e e e e e e e e e e f . . 
+        . . . f e e e e e e e e f . . . 
+        . . e 4 f f f f f f f f 4 e . . 
+        . . 4 d f 2 2 2 2 2 2 f d 4 . . 
+        . . 4 4 f 4 4 4 4 4 4 f 4 4 . . 
+        . . . . . f f . . f f . . . . . 
+        `],
+    500,
+    characterAnimations.rule(Predicate.NotMoving, Predicate.FacingUp)
+    )
+    characterAnimations.loopFrames(
+    hero,
+    [img`
+        . . . . . . f f f f f f . . . . 
+        . . . . f f e e e e f 2 f . . . 
+        . . . f f e e e e f 2 2 2 f . . 
+        . . . f e e e f f e e e e f . . 
+        . . . f f f f e e 2 2 2 2 e f . 
+        . . . f e 2 2 2 f f f f e 2 f . 
+        . . f f f f f f f e e e f f f . 
+        . . f f e 4 4 e b f 4 4 e e f . 
+        . . f e e 4 d 4 1 f d d e f . . 
+        . . . f e e e 4 d d d d f . . . 
+        . . . . f f e e 4 4 4 e f . . . 
+        . . . . . 4 d d e 2 2 2 f . . . 
+        . . . . . e d d e 2 2 2 f . . . 
+        . . . . . f e e f 4 5 5 f . . . 
+        . . . . . . f f f f f f . . . . 
+        . . . . . . . f f f . . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . f f f f f f . . . . 
+        . . . . f f e e e e f 2 f . . . 
+        . . . f f e e e e f 2 2 2 f . . 
+        . . . f e e e f f e e e e f . . 
+        . . . f f f f e e 2 2 2 2 e f . 
+        . . . f e 2 2 2 f f f f e 2 f . 
+        . . f f f f f f f e e e f f f . 
+        . . f f e 4 4 e b f 4 4 e e f . 
+        . . f e e 4 d 4 1 f d d e f . . 
+        . . . f e e e 4 d d d d f . . . 
+        . . . . f f e e 4 4 4 e f . . . 
+        . . . . . 4 d d e 2 2 2 f . . . 
+        . . . . . e d d e 2 2 2 f . . . 
+        . . . . . f e e f 4 5 5 f . . . 
+        . . . . . . f f f f f f . . . . 
+        `],
+    500,
+    characterAnimations.rule(Predicate.NotMoving, Predicate.FacingRight)
+    )
+    characterAnimations.loopFrames(
+    hero,
+    [img`
+        . . . . f f f f f f . . . . . . 
+        . . . f 2 f e e e e f f . . . . 
+        . . f 2 2 2 f e e e e f f . . . 
+        . . f e e e e f f e e e f . . . 
+        . f e 2 2 2 2 e e f f f f . . . 
+        . f 2 e f f f f 2 2 2 e f . . . 
+        . f f f e e e f f f f f f f . . 
+        . f e e 4 4 f b e 4 4 e f f . . 
+        . . f e d d f 1 4 d 4 e e f . . 
+        . . . f d d d d 4 e e e f . . . 
+        . . . f e 4 4 4 e e f f . . . . 
+        . . . f 2 2 2 e d d 4 . . . . . 
+        . . . f 2 2 2 e d d e . . . . . 
+        . . . f 5 5 4 f e e f . . . . . 
+        . . . . f f f f f f . . . . . . 
+        . . . . . . f f f . . . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . f f f f f f . . . . . . 
+        . . . f 2 f e e e e f f . . . . 
+        . . f 2 2 2 f e e e e f f . . . 
+        . . f e e e e f f e e e f . . . 
+        . f e 2 2 2 2 e e f f f f . . . 
+        . f 2 e f f f f 2 2 2 e f . . . 
+        . f f f e e e f f f f f f f . . 
+        . f e e 4 4 f b e 4 4 e f f . . 
+        . . f e d d f 1 4 d 4 e e f . . 
+        . . . f d d d d 4 e e e f . . . 
+        . . . f e 4 4 4 e e f f . . . . 
+        . . . f 2 2 2 e d d 4 . . . . . 
+        . . . f 2 2 2 e d d e . . . . . 
+        . . . f 5 5 4 f e e f . . . . . 
+        . . . . f f f f f f . . . . . . 
+        `],
+    500,
+    characterAnimations.rule(Predicate.NotMoving, Predicate.FacingLeft)
+    )
+}
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    handlePlayerProjectiles()
+    if (currentLevel == 1) {
+        levelOneStartRoomSequence()
+    } else if (currentLevel == 2) {
+    	
+    } else if (currentLevel == 3) {
+    	
+    }
+})
+function levelOneBossSequence () {
+	
+}
+// For loading and merging tilemaps
+function handleTilemaps () {
+    levelOneMap = tilemap`starting_level`
+    levelOneLeftMap = tilemap`left_map`
+    tileUtil.connectMaps(levelOneMap, levelOneLeftMap, MapConnectionKind.Door1)
+}
+function levelOneStartRoomHitsWallLogic (sprite: Sprite) {
+    if (sprite.tileKindAt(TileDirection.Top, sprites.dungeon.greenSwitchUp)) {
+        if (!(isKeyInserted)) {
+            sprite.sayText("oh! A Lever!", 1000, true)
+        }
+    } else if (sprite.tileKindAt(TileDirection.Right, assets.tile`myTile10`) || sprite.tileKindAt(TileDirection.Right, assets.tile`myTile11`)) {
+        scene.cameraShake(4, 200)
+        sprite.sayText("locked.", 2500, true)
+    } else if (sprite.tileKindAt(TileDirection.Top, assets.tile`myTile7`)) {
+        if (!(hasKey)) {
+            sprite.sayText("hmm...a key hole...", 2000, true)
+        }
+    }
+}
+statusbars.onZero(StatusBarKind.Health, function (status) {
+    info.changeLifeBy(-1)
+    respawnPlayer()
+    game.showLongText("Only " + info.life() + "lives left..", DialogLayout.Center)
 })
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.hazardLava1, function (sprite, location) {
     sprite.sayText("ow!", 500, false)
@@ -422,82 +650,6 @@ tileUtil.onMapLoaded(function (tilemap2) {
         tileUtil.coverAllTiles(tileUtil.door0, sprites.dungeon.floorDark2)
     }
 })
-controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
-    animation.runImageAnimation(
-    hero,
-    [img`
-        . . . . . . f f f f . . . . . . 
-        . . . . f f f 2 2 f f f . . . . 
-        . . . f f f 2 2 2 2 f f f . . . 
-        . . f f f e e e e e e f f f . . 
-        . . f f e 2 2 2 2 2 2 e e f . . 
-        . . f e 2 f f f f f f 2 e f . . 
-        . . f f f f e e e e f f f f . . 
-        . f f e f b f 4 4 f b f e f f . 
-        . f e e 4 1 f d d f 1 4 e e f . 
-        . . f e e d d d d d d e e f . . 
-        . . . f e e 4 4 4 4 e e f . . . 
-        . . e 4 f 2 2 2 2 2 2 f 4 e . . 
-        . . 4 d f 2 2 2 2 2 2 f d 4 . . 
-        . . 4 4 f 4 4 5 5 4 4 f 4 4 . . 
-        . . . . . f f f f f f . . . . . 
-        . . . . . f f . . f f . . . . . 
-        `,img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . f f f f . . . . . . 
-        . . . . f f f 2 2 f f f . . . . 
-        . . . f f f 2 2 2 2 f f f . . . 
-        . . f f f e e e e e e f f f . . 
-        . . f f e 2 2 2 2 2 2 e e f . . 
-        . f f e 2 f f f f f f 2 e f f . 
-        . f f f f f e e e e f f f f f . 
-        . . f e f b f 4 4 f b f e f . . 
-        . . f e 4 1 f d d f 1 4 e f . . 
-        . . . f e 4 d d d d 4 e f e . . 
-        . . f e f 2 2 2 2 e d d 4 e . . 
-        . . e 4 f 2 2 2 2 e d d e . . . 
-        . . . . f 4 4 5 5 f e e . . . . 
-        . . . . f f f f f f f . . . . . 
-        . . . . f f f . . . . . . . . . 
-        `,img`
-        . . . . . . f f f f . . . . . . 
-        . . . . f f f 2 2 f f f . . . . 
-        . . . f f f 2 2 2 2 f f f . . . 
-        . . f f f e e e e e e f f f . . 
-        . . f f e 2 2 2 2 2 2 e e f . . 
-        . . f e 2 f f f f f f 2 e f . . 
-        . . f f f f e e e e f f f f . . 
-        . f f e f b f 4 4 f b f e f f . 
-        . f e e 4 1 f d d f 1 4 e e f . 
-        . . f e e d d d d d d e e f . . 
-        . . . f e e 4 4 4 4 e e f . . . 
-        . . e 4 f 2 2 2 2 2 2 f 4 e . . 
-        . . 4 d f 2 2 2 2 2 2 f d 4 . . 
-        . . 4 4 f 4 4 5 5 4 4 f 4 4 . . 
-        . . . . . f f f f f f . . . . . 
-        . . . . . f f . . f f . . . . . 
-        `,img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . f f f f . . . . . . 
-        . . . . f f f 2 2 f f f . . . . 
-        . . . f f f 2 2 2 2 f f f . . . 
-        . . f f f e e e e e e f f f . . 
-        . . f e e 2 2 2 2 2 2 e f f . . 
-        . f f e 2 f f f f f f 2 e f f . 
-        . f f f f f e e e e f f f f f . 
-        . . f e f b f 4 4 f b f e f . . 
-        . . f e 4 1 f d d f 1 4 e f . . 
-        . . e f e 4 d d d d 4 e f . . . 
-        . . e 4 d d e 2 2 2 2 f e f . . 
-        . . . e d d e 2 2 2 2 f 4 e . . 
-        . . . . e e f 5 5 4 4 f . . . . 
-        . . . . . f f f f f f f . . . . 
-        . . . . . . . . . f f f . . . . 
-        `],
-    100,
-    false
-    )
-})
 info.onLifeZero(function () {
     game.gameOver(false)
 })
@@ -581,8 +733,8 @@ let text_list: string[] = []
 let projectile: Sprite = null
 let isKeyInserted = false
 let statusbar: StatusBarSprite = null
-let levelOneLeftMap: tiles.TileMapData = null
 let hero: Sprite = null
+let levelOneLeftMap: tiles.TileMapData = null
 let enemyStatusBar: StatusBarSprite = null
 let levelOneMap: tiles.TileMapData = null
 let currentLevel = 0

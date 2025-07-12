@@ -19,6 +19,10 @@ scene.onHitWall(SpriteKind.Player, function (sprite, location) {
         levelOneStartRoomHitsWallLogic(sprite)
     }
 })
+controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+    yDir = -1
+    xDir = 0
+})
 scene.onOverlapTile(SpriteKind.Player, tileUtil.door0, function (sprite, location) {
     tileUtil.loadConnectedMap(MapConnectionKind.Door1)
     tiles.placeOnRandomTile(sprite, tileUtil.door0)
@@ -32,6 +36,8 @@ tileUtil.onMapUnloaded(function (tilemap2) {
     sprites.destroyAllSpritesOfKind(SpriteKind.Enemy)
 })
 function setPlayer () {
+    yDir = 0
+    xDir = 1
     hero = sprites.create(img`
         . . . . . . f f f f . . . . . . 
         . . . . f f f 2 2 f f f . . . . 
@@ -534,6 +540,10 @@ function handleTilemaps () {
     levelOneLeftMap = tilemap`left_map`
     tileUtil.connectMaps(levelOneMap, levelOneLeftMap, MapConnectionKind.Door1)
 }
+controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
+    xDir = -1
+    yDir = 0
+})
 function levelOneStartRoomHitsWallLogic (sprite: Sprite) {
     if (sprite.tileKindAt(TileDirection.Top, sprites.dungeon.greenSwitchUp)) {
         if (!(isKeyInserted)) {
@@ -553,6 +563,10 @@ statusbars.onZero(StatusBarKind.Health, function (status) {
     respawnPlayer()
     game.showLongText("Only " + info.life() + "lives left..", DialogLayout.Center)
 })
+controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
+    xDir = 1
+    yDir = 0
+})
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.hazardLava1, function (sprite, location) {
     sprite.sayText("ow!", 500, false)
     scene.cameraShake(4, 500)
@@ -560,7 +574,7 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.hazardLava1, function (sp
     respawnPlayer()
 })
 function handlePlayerProjectiles () {
-    if (controller.left.isPressed()) {
+    if (xDir == -1) {
         projectile = sprites.createProjectileFromSprite(img`
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
@@ -568,18 +582,18 @@ function handlePlayerProjectiles () {
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
-            . . . . . 2 2 2 3 3 3 2 . . . . 
-            . 2 2 2 3 3 1 1 1 1 1 3 2 . . . 
-            . 1 1 1 1 1 1 1 1 1 1 1 2 . . . 
-            . 2 2 2 3 3 1 1 1 1 1 3 2 . . . 
-            . . . . . 2 2 3 3 3 3 2 . . . . 
+            . . . . 2 3 3 3 2 2 2 . . . . . 
+            . . . 2 3 1 1 1 1 1 3 3 2 2 2 . 
+            . . . 2 1 1 1 1 1 1 1 1 1 1 1 . 
+            . . . 2 3 1 1 1 1 1 3 3 2 2 2 . 
+            . . . . 2 3 3 3 3 2 2 . . . . . 
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
             `, hero, -150, 0)
-    } else if (controller.right.isPressed()) {
+    } else if (xDir == 1) {
         projectile = sprites.createProjectileFromSprite(img`
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
@@ -598,7 +612,7 @@ function handlePlayerProjectiles () {
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
             `, hero, 150, 0)
-    } else if (controller.up.isPressed()) {
+    } else if (yDir == -1) {
         projectile = sprites.createProjectileFromSprite(img`
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
@@ -617,7 +631,7 @@ function handlePlayerProjectiles () {
             . . . . . . . 2 1 2 . . . . . . 
             . . . . . . . . . . . . . . . . 
             `, hero, 0, -150)
-    } else if (controller.down.isPressed()) {
+    } else if (yDir == 1) {
         projectile = sprites.createProjectileFromSprite(img`
             . . . . . . . . . . . . . . . . 
             . . . . . . 2 1 2 . . . . . . . 
@@ -649,6 +663,10 @@ tileUtil.onMapLoaded(function (tilemap2) {
     } else if (tileUtil.currentTilemap() == levelOneMap) {
         tileUtil.coverAllTiles(tileUtil.door0, sprites.dungeon.floorDark2)
     }
+})
+controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
+    yDir = 1
+    xDir = 0
 })
 info.onLifeZero(function () {
     game.gameOver(false)
@@ -735,6 +753,8 @@ let isKeyInserted = false
 let statusbar: StatusBarSprite = null
 let hero: Sprite = null
 let levelOneLeftMap: tiles.TileMapData = null
+let xDir = 0
+let yDir = 0
 let enemyStatusBar: StatusBarSprite = null
 let levelOneMap: tiles.TileMapData = null
 let currentLevel = 0

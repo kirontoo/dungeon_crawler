@@ -11,6 +11,7 @@ function setLevel (level: number) {
 sprites.onCreated(SpriteKind.Enemy, function (sprite) {
     enemyStatusBar = statusbars.create(20, 4, StatusBarKind.EnemyHealth)
     enemyStatusBar.attachToSprite(sprite)
+    enemyStatusBar.value = 100
 })
 scene.onHitWall(SpriteKind.Player, function (sprite, location) {
     if (currentLevel == 1) {
@@ -519,6 +520,17 @@ function setPlayer () {
     characterAnimations.rule(Predicate.NotMoving, Predicate.FacingLeft)
     )
 }
+statusbars.onDisplayUpdated(StatusBarKind.Health, function (status, image2) {
+    if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.FacingRight))) {
+        hero.x += -5
+    } else if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.FacingLeft))) {
+        hero.x += 5
+    } else if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.MovingUp))) {
+        hero.y += 5
+    } else if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.FacingDown))) {
+        hero.y += -5
+    }
+})
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     handlePlayerProjectiles()
     if (currentLevel == 1) {
@@ -534,10 +546,15 @@ function levelOneBossSequence () {
 }
 // For loading and merging tilemaps
 function setupTilemaps () {
+    levelOneChamberMap = tilemap`level2`
     levelOneMap = tilemap`level_1`
     levelOneLeftMap = tilemap`level_1_left`
     tileUtil.connectMaps(levelOneMap, levelOneLeftMap, MapConnectionKind.Door1)
 }
+statusbars.onStatusReached(StatusBarKind.Health, statusbars.StatusComparison.LTE, statusbars.ComparisonType.Percentage, 50, function (status) {
+    hero.sayText("health is low!", 1000, false)
+    music.play(music.melodyPlayable(music.knock), music.PlaybackMode.UntilDone)
+})
 function setupVariables () {
     info.setLife(3)
     checkpoint = hero.tilemapLocation()
@@ -561,10 +578,14 @@ function levelOneStartRoomHitsWallLogic (sprite: Sprite) {
         }
     }
 }
+statusbars.onZero(StatusBarKind.EnemyHealth, function (status) {
+    sprites.destroy(status.spriteAttachedTo(), effects.spray, 500)
+    music.play(music.melodyPlayable(music.spooky), music.PlaybackMode.UntilDone)
+})
 statusbars.onZero(StatusBarKind.Health, function (status) {
     info.changeLifeBy(-1)
     respawnPlayer()
-    game.showLongText("Only " + info.life() + "lives left..", DialogLayout.Center)
+    game.showLongText("Only " + info.life() + " lives left..", DialogLayout.Center)
 })
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     xDir = 1
@@ -739,19 +760,9 @@ controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
     xDir = 0
 })
 info.onLifeZero(function () {
+    game.setGameOverMessage(false, "Better luck next time")
     game.gameOver(false)
 })
-function setIntro () {
-    text_list = [
-    "Robot Attack!",
-    "Shoot the robots",
-    "with the A button",
-    "only then"
-    ]
-    for (let value of text_list) {
-        game.splash(value)
-    }
-}
 // level_1 starting room logic
 function levelOneStartRoomSequence () {
     if (hero.tileKindAt(TileDirection.Left, sprites.dungeon.greenOuterWest1) || hero.tileKindAt(TileDirection.Top, sprites.dungeon.greenOuterNorth1)) {
@@ -807,22 +818,26 @@ function levelOneStartRoomSequence () {
 }
 sprites.onOverlap(SpriteKind.Projectile, SpriteKind.Enemy, function (sprite, otherSprite) {
     sprites.destroy(sprite)
-    sprites.destroy(otherSprite)
+    statusbars.getStatusBarAttachedTo(StatusBarKind.EnemyHealth, otherSprite).value += -50
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
     statusbar.value += -15
-    otherSprite.setFlag(SpriteFlag.GhostThroughSprites, false)
+    otherSprite.setFlag(SpriteFlag.GhostThroughSprites, true)
+    timer.after(800, function () {
+        otherSprite.setFlag(SpriteFlag.GhostThroughSprites, false)
+    })
+    music.play(music.melodyPlayable(music.knock), music.PlaybackMode.UntilDone)
 })
 function respawnPlayer () {
     tiles.placeOnRandomTile(hero, assets.tile`myTile`)
 }
 let dungeonKey: Sprite = null
-let text_list: string[] = []
 let projectile: Sprite = null
 let ghost: Sprite = null
 let isKeyInserted = false
 let hasKey = false
 let checkpoint: tiles.Location = null
+let levelOneChamberMap: tiles.TileMapData = null
 let statusbar: StatusBarSprite = null
 let hero: Sprite = null
 let levelOneLeftMap: tiles.TileMapData = null

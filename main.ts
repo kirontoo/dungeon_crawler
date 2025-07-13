@@ -8,6 +8,9 @@ function setLevel (level: number) {
     	
     }
 }
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile0`, function (sprite, location) {
+    checkpoint = sprite.tilemapLocation()
+})
 sprites.onCreated(SpriteKind.Enemy, function (sprite) {
     enemyStatusBar = statusbars.create(20, 4, StatusBarKind.EnemyHealth)
     enemyStatusBar.attachToSprite(sprite)
@@ -829,14 +832,13 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
     music.play(music.melodyPlayable(music.knock), music.PlaybackMode.UntilDone)
 })
 function respawnPlayer () {
-    tiles.placeOnRandomTile(hero, assets.tile`myTile`)
+    tiles.placeOnTile(hero, checkpoint)
 }
 let dungeonKey: Sprite = null
 let projectile: Sprite = null
 let ghost: Sprite = null
 let isKeyInserted = false
 let hasKey = false
-let checkpoint: tiles.Location = null
 let levelOneChamberMap: tiles.TileMapData = null
 let statusbar: StatusBarSprite = null
 let hero: Sprite = null
@@ -844,6 +846,7 @@ let levelOneLeftMap: tiles.TileMapData = null
 let xDir = 0
 let yDir = 0
 let enemyStatusBar: StatusBarSprite = null
+let checkpoint: tiles.Location = null
 let levelOneMap: tiles.TileMapData = null
 let currentLevel = 0
 game.setDialogTextColor(1)

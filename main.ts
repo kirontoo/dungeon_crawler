@@ -9,21 +9,21 @@ function setLevel (level: number) {
     }
 }
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile0`, function (sprite, location) {
-    checkpoint = sprite.tilemapLocation()
+    checkpoint = location
 })
 sprites.onCreated(SpriteKind.Enemy, function (sprite) {
     enemyStatusBar = statusbars.create(20, 4, StatusBarKind.EnemyHealth)
     enemyStatusBar.attachToSprite(sprite)
     enemyStatusBar.value = 100
 })
+controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+    yDir = -1
+    xDir = 0
+})
 scene.onHitWall(SpriteKind.Player, function (sprite, location) {
     if (currentLevel == 1) {
         levelOneStartRoomHitsWallLogic(sprite)
     }
-})
-controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
-    yDir = -1
-    xDir = 0
 })
 scene.onOverlapTile(SpriteKind.Player, tileUtil.door0, function (sprite, location) {
     tileUtil.loadConnectedMap(MapConnectionKind.Door1)
@@ -36,6 +36,15 @@ scene.onOverlapTile(SpriteKind.Player, tileUtil.door0, function (sprite, locatio
 })
 tileUtil.onMapUnloaded(function (tilemap2) {
     sprites.destroyAllSpritesOfKind(SpriteKind.Enemy)
+})
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (currentLevel == 1) {
+        levelOneStartRoomSequence()
+    } else if (currentLevel == 2) {
+    	
+    } else if (currentLevel == 3) {
+    	
+    }
 })
 function setPlayer () {
     yDir = 0
@@ -536,13 +545,6 @@ statusbars.onDisplayUpdated(StatusBarKind.Health, function (status, image2) {
 })
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     handlePlayerProjectiles()
-    if (currentLevel == 1) {
-        levelOneStartRoomSequence()
-    } else if (currentLevel == 2) {
-    	
-    } else if (currentLevel == 3) {
-    	
-    }
 })
 function levelOneBossSequence () {
 	
@@ -764,7 +766,6 @@ controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
 })
 info.onLifeZero(function () {
     game.setGameOverMessage(false, "Better luck next time")
-    game.gameOver(false)
 })
 // level_1 starting room logic
 function levelOneStartRoomSequence () {

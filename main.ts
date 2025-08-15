@@ -24,7 +24,7 @@ scene.onHitWall(SpriteKind.Player, function (sprite, location) {
     if (currentLevel == 1 && level_room == "starting") {
         levelOneStartRoomHitsWallLogic(sprite)
     } else if (currentLevel == 1 && level_room == "melody") {
-    	
+        levelOnePuzzleRoomHitsWallLogic(sprite, location)
     } else {
     	
     }
@@ -537,7 +537,11 @@ function setPlayer () {
     )
 }
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile13`, function (sprite, location) {
-    level_room = "melody"
+    if (location.column == 41 && location.row == 66 && characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.FacingUp))) {
+        level_room = ""
+    } else if (location.column == 41 && location.row == 66 && characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.FacingDown))) {
+        level_room = "melody"
+    }
 })
 statusbars.onDisplayUpdated(StatusBarKind.Health, function (status, image2) {
     if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.FacingRight))) {
@@ -546,12 +550,15 @@ statusbars.onDisplayUpdated(StatusBarKind.Health, function (status, image2) {
         hero.x += 5
     } else if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.MovingUp))) {
         hero.y += 5
-    } else if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.FacingDown))) {
+    } else if (false) {
         hero.y += -5
     }
 })
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     handlePlayerProjectiles()
+})
+scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.greenSwitchUp, function (sprite, location) {
+	
 })
 function levelOneBossSequence () {
 	
@@ -595,14 +602,27 @@ statusbars.onZero(StatusBarKind.EnemyHealth, function (status) {
     sprites.destroy(status.spriteAttachedTo(), effects.spray, 500)
     music.play(music.melodyPlayable(music.spooky), music.PlaybackMode.UntilDone)
 })
+function levelOnePuzzleRoomHitsWallLogic (sprite: Sprite, location: tiles.Location) {
+    if (controller.A.isPressed()) {
+        if (tiles.tileAtLocationEquals(location, sprites.dungeon.greenSwitchUp) && (location.column == 45 && location.row == 68)) {
+        	
+        } else if (tiles.tileAtLocationEquals(location, sprites.dungeon.greenSwitchUp) && (location.column == 49 && location.row == 68)) {
+        	
+        } else if (tiles.tileAtLocationEquals(location, sprites.dungeon.greenSwitchUp) && (location.column == 45 && location.row == 72)) {
+        	
+        } else if (tiles.tileAtLocationEquals(location, sprites.dungeon.greenSwitchUp) && (location.column == 49 && location.row == 72)) {
+        	
+        }
+    }
+}
 statusbars.onZero(StatusBarKind.Health, function (status) {
     info.changeLifeBy(-1)
     respawnPlayer()
     game.showLongText("Only " + info.life() + " lives left..", DialogLayout.Center)
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile21`, function (sprite, location) {
-    music.play(music.stringPlayable("E G D B - - - - ", 120), music.PlaybackMode.UntilDone)
     tiles.setTileAt(location, sprites.dungeon.floorLight0)
+    music.play(music.stringPlayable("E G D B - - - - ", 120), music.PlaybackMode.UntilDone)
 })
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     xDir = 1

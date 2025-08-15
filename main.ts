@@ -21,8 +21,12 @@ controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     xDir = 0
 })
 scene.onHitWall(SpriteKind.Player, function (sprite, location) {
-    if (currentLevel == 1) {
+    if (currentLevel == 1 && level_room == "starting") {
         levelOneStartRoomHitsWallLogic(sprite)
+    } else if (currentLevel == 1 && level_room == "melody") {
+    	
+    } else {
+    	
     }
 })
 scene.onOverlapTile(SpriteKind.Player, tileUtil.door0, function (sprite, location) {
@@ -532,6 +536,9 @@ function setPlayer () {
     characterAnimations.rule(Predicate.NotMoving, Predicate.FacingLeft)
     )
 }
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile13`, function (sprite, location) {
+    level_room = "melody"
+})
 statusbars.onDisplayUpdated(StatusBarKind.Health, function (status, image2) {
     if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.FacingRight))) {
         hero.x += -5
@@ -564,6 +571,7 @@ function setupVariables () {
     info.setLife(3)
     checkpoint = hero.tilemapLocation()
     hasKey = false
+    level_room = "starting"
 }
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
     xDir = -1
@@ -591,6 +599,10 @@ statusbars.onZero(StatusBarKind.Health, function (status) {
     info.changeLifeBy(-1)
     respawnPlayer()
     game.showLongText("Only " + info.life() + " lives left..", DialogLayout.Center)
+})
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile21`, function (sprite, location) {
+    music.play(music.stringPlayable("E G D B - - - - ", 120), music.PlaybackMode.UntilDone)
+    tiles.setTileAt(location, sprites.dungeon.floorLight0)
 })
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     xDir = 1
@@ -815,6 +827,7 @@ function levelOneStartRoomSequence () {
         tiles.setTileAt(tiles.getTileLocation(20, 66), assets.tile`myTile5`)
         tiles.setWallAt(tiles.getTileLocation(20, 65), false)
         tiles.setWallAt(tiles.getTileLocation(20, 66), false)
+        level_room = ""
         music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
     } else if (!(isKeyInserted) && hero.tileKindAt(TileDirection.Top, assets.tile`myTile7`)) {
         hero.sayText("I think we need a key?", 2000, true)
@@ -842,7 +855,6 @@ let isKeyInserted = false
 let hasKey = false
 let levelOneChamberMap: tiles.TileMapData = null
 let statusbar: StatusBarSprite = null
-let hero: Sprite = null
 let levelOneLeftMap: tiles.TileMapData = null
 let xDir = 0
 let yDir = 0
@@ -850,6 +862,8 @@ let enemyStatusBar: StatusBarSprite = null
 let checkpoint: tiles.Location = null
 let levelOneMap: tiles.TileMapData = null
 let currentLevel = 0
+let level_room = ""
+let hero: Sprite = null
 game.setDialogTextColor(1)
 game.setDialogFrame(img`
     ffffffffffffffffffffffff
@@ -881,3 +895,5 @@ setupTilemaps()
 setLevel(1)
 setPlayer()
 setupVariables()
+tiles.placeOnTile(hero, tiles.getTileLocation(41, 65))
+level_room = "melody"
